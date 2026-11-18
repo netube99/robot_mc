@@ -1,7 +1,8 @@
 /* GNU linker script for the N32H473CE (512 KB flash / 144 KB SRAM).
  *
- * Mirrors the memory layout of Keil/ODrive_N32.sct, including the 16-byte
- * NO_INIT region at the top of SRAM that holds variables which must survive a
+ * The historical Keil scatter file is archived at legacy/keil/ODrive_N32.sct.
+ * This script owns the active GCC layout, including the 16-byte NO_INIT region
+ * at the top of SRAM that holds variables which must survive a
  * soft reset (_reboot_cookie, see main.c / the .bss.NO_INIT section).
  *
  *   BOOT  : 0x08000000, 0x08000 (OpenBootloader, 32 KB - not part of this image)

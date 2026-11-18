@@ -1,11 +1,8 @@
 ##############################################################################
 # Makefile for the N32H473CE motorcontrol firmware
 #
-# Command-line equivalent of the Keil project Keil/mit_h473.uvprojx (target
-# mit_h473, device N32H473CE, AC6).  It compiles the same sources with the same
-# include paths and defines, but uses the GNU Arm Embedded Toolchain together
-# with startup_n32h473_gcc.s and N32H473CE_FLASH.ld (instead of the Keil ARMASM
-# startup and Keil/ODrive_N32.sct).
+# GNU Arm Embedded command-line build for the N32H473CE application image.
+# Uses the vendor GCC startup and N32H473CE_FLASH.ld.
 #
 # Targets:
 #   make [all]     build build/mit_h473.elf/.hex/.bin
@@ -47,7 +44,7 @@ OD = $(PREFIX)objdump
 endif
 
 ######################################
-# sources  (same set as the Keil project)
+# firmware sources (the GCC build is the supported project entry point)
 ######################################
 C_SOURCES = \
 $(wildcard Core/Src/*.c) \
@@ -189,7 +186,7 @@ hosttest-py:
 ######################################
 # flash
 #
-# The Keil project debugs over J-Link (see Keil/JLinkSettings.ini), so `flash`
+# The firmware is programmed over J-Link, so `flash`
 # drives the J-Link Commander.  Override the probe settings as needed, e.g.:
 #     make flash JLINK_DEVICE=N32H473CE JLINK_IF=SWD JLINK_SPEED=4000
 # If J-Link does not know the exact device, set JLINK_DEVICE to a compatible

@@ -13,6 +13,10 @@
 
 ## 构建
 
+本仓库使用 GNU Arm Embedded GCC 和 Makefile 构建固件。
+GCC 构建使用 N32H47x SDK 自带的 `startup_n32h47x_48x_gcc.S`，
+应用向量表与链接地址均位于 `0x08008000`（OpenBootloader 之后）。
+
 ```bash
 make              # build/mit_h473.elf/.hex/.bin
 make DEBUG=1      # -Og -g3
@@ -23,13 +27,21 @@ make flash        # J-Link；可覆盖 JLINK_DEVICE/JLINK_IF/JLINK_SPEED
 make clean
 ```
 
-需要 `arm-none-eabi-gcc` 在 PATH（`GCC_PATH=` 可覆盖）。Windows 上建议用
-MSYS2 bash：Chocolatey 的 make 用 cmd，`mkdir -p` 会失败。
+需要 GNU Arm Embedded Toolchain（`arm-none-eabi-gcc`、`objcopy`、`size`）和 GNU Make；
+工具链需支持 Cortex-M4F hard-float ABI。工具链不在 PATH 时可用 `GCC_PATH=` 指定其
+`bin` 目录。Windows 上建议用 MSYS2 bash：Chocolatey 的 make 用 cmd，`mkdir -p` 会失败。
 
-也支持 **Keil MDK（AC6）**：`Keil/mit_h473.uvprojx`，scatter `Keil/ODrive_N32.sct`。
+> ⚠ 当前 N32H473CE 固件入口是根目录 `Makefile`；不要用旧 STM32F446/CubeMX 工程重新生成源码。
+> 原始 CubeIDE 配置、`.ioc` 和 STM32F446 链接脚本已归档到 `legacy/stm32f446/`，仅供历史追溯。
 
-> ⚠ `motorcontrol.ioc` 是上游 STM32F446 的 CubeMX 文件，**不要重新生成**；
-> `adc.c`/`tim.c` 有 `USER CODE` 块之外的手工修改。
+## 仓库结构
+
+- `Core/`：N32H473 应用固件源码与头文件。
+- `Drivers/`：Nations N32H47x 外设库、USBFSD 与 CMSIS。
+- 根目录 `Makefile`、`N32H473CE_FLASH.ld`：当前 GCC 构建入口与内存布局。
+- `tools/`：代码生成器、主机端 CAN/OTA/调试工具和 host tests。
+- `docs/`：用户、开发者和参数文档。
+- `legacy/`：不参与当前构建的旧 STM32F446/CubeIDE 与 Keil 工程资料，说明见 [`legacy/README.md`](legacy/README.md)。
 
 ## 文档
 

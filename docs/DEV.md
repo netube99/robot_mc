@@ -1384,7 +1384,7 @@ p_max/v_max/kp_max/kd_max` 在运行期决定，写死一个数字会让上位�
 ## params.json 与代码生成
 
 `params.json`（仓库根）是唯一真源：endpoint、描述符、持久化表、默认值、限幅、
-参数手册都由它生成。生成物提交进仓库（Keil 和没装 Python 的机器要能编译）。
+参数手册都由它生成。生成物提交进仓库，使固件构建不依赖 Python。
 
 | 文件 | 作用 |
 |---|---|
@@ -1525,8 +1525,8 @@ schema 1→2 单位迁移与降级块仍可读）。
 | 配置页 A | `0x0807C000` – `0x0807DFFF` | 8 KB |
 | 配置页 B | `0x0807E000` – `0x0807FFFF` | 8 KB |
 
-链接器强制：`N32H473CE_FLASH.ld` 的 `ORIGIN = 0x08008000, LENGTH = 0x74000`；
-`Keil/ODrive_N32.sct` 的 `LR_IROM1 0x08008000 0x00074000`。镜像超了直接报错。
+链接器强制：`N32H473CE_FLASH.ld` 的 `ORIGIN = 0x08008000, LENGTH = 0x74000`。
+镜像超了直接报错。
 向量表偏移 `VECT_TAB_OFFSET = 0x8000`（`Core/Src/system_n32h47x_48x.c`）必须跟着改——
 三处不一致的表现是"能启动、但所有中断按 bootloader 的向量表分发"。
 
@@ -1920,7 +1920,7 @@ python tools/flash_jlink.py --bin build/motorcontrol.bin   # GNU 构建产物也
       `PREFS_SCHEMA` 是否变化已确认；`FW_VERSION_UNRELEASED` 只在预发布构建里为 1；
 - [ ] ID 注册表只追加、没有复用/重排；
 - [ ] `make check` 通过，生成物与文档一起提交；
-- [ ] GNU Make 和 Keil AC6 都能干净构建；`make size` 镜像 < `0x0807C000`
+- [ ] GNU Make 能干净构建；`make size` 镜像 < `0x0807C000`
       （app 从 `0x08008000` 起，最多 `0x74000`）；
 - [ ] `make hosttest` + 台架清单通过（含 USB 复合设备的 CDC/vendor 两条传输）；
 - [ ] 改了齿槽补偿/外环：`action.cogging_calibrate` 跑通，`system.cogging_amp` /

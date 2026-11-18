@@ -40,7 +40,7 @@ python tools/mc_ep.py --usb call action.enter_bootloader_mode     # 或串口菜
 # 1) 握手：确认总线上就是 bootloader
 python tools/blcan.py --channel COM7 sync
 
-# 2) 升级（GNU 构建产物；Keil 构建用 Keil/Objects/mit_h473.hex，可省略 --addr）
+# 2) 升级（GCC 构建产物需显式指定 App 地址）
 python tools/blcan.py --channel COM7 upgrade \
         --firmware build/mit_h473.bin \
         --erase auto \

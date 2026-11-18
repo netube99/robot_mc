@@ -849,8 +849,8 @@ python tools/blcan.py --channel COM3 upgrade --firmware build/mit_h473.bin \
 - **进 bootloader 后不会再自动跳回 App**（要断电或 `go` 才离开），可以从容升级。
 - `--erase auto` 只擦镜像覆盖的页；**绝对不要用 `--erase mass`**——那会把 bootloader
   和两页配置一起擦掉，之后只能用 J-Link 重烧 bootloader。
-- `build/mit_h473.bin` 是从 `0x08008000` 开始的原样镜像，所以 `--addr`/`--go-addr`
-  必须是 `0x08008000`（Keil 构建直接用 `Keil/Objects/mit_h473.hex` 时可省 `--addr`）。
+- `build/mit_h473.bin` 是从 `0x08008000` 开始的原样 GCC 镜像，所以 `--addr`/`--go-addr`
+  必须是 `0x08008000`。
 - 上电时不发 SYNC 的话，bootloader 等 200 ms 就跳回 App，正常使用感觉不到它的存在。
 - 升级完核对 `system.fw_version_*` 与 `system.prefs_loaded`，并确认 `config.*` 还在
   （见上一节）。

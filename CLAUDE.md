@@ -4,20 +4,13 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-Firmware for an STM32F446-based 3-phase motor controller (FOC / field-oriented control) driving a DRV8323 gate driver, written for the hardware at https://github.com/bgkatz/3phase_integrated. Bare-metal C with the ST HAL, no RTOS.
+Historical upstream architecture notes for a bare-metal 3-phase motor controller. This repository is now a Nations N32H473CE port; current hardware, SDK, and build details are documented in `AGENTS.md` and `README.md`.
 
 ## Build
 
-```
-make            # outputs build/motorcontrol.elf/.bin/.hex (arm-none-eabi-gcc + make, both on PATH)
-make DEBUG=1    # -Og/-g3 debug build
-make flash      # flash over ST-Link (STM32_Programmer_CLI or st-flash)
-make clean
-```
+This file is inherited from the STM32F446 upstream. Its hardware and build guidance below is historical and must not be used as the N32H473 project configuration. The CubeIDE metadata is archived under `legacy/stm32f446/`; the supported GCC build and targets are documented in the root `README.md` and `Makefile`. Automated checks and host tests are documented in `AGENTS.md`; hardware verification remains the maintainer's responsibility. For pure math changes (e.g. `math_ops.c`), a bit-faithful float32 Python simulation (numpy `float32`, C-style truncating casts) compared against float64 references has been used to verify before flashing.
 
-The STM32CubeIDE project also still works. There are no automated tests; verification is a clean build plus bench testing by the maintainer. For pure math changes (e.g. `math_ops.c`), a bit-faithful float32 Python simulation (numpy `float32`, C-style truncating casts) compared against float64 references has been used to verify before flashing.
-
-**CubeMX caveat:** `adc.c` and `tim.c` contain hand edits *outside* the `USER CODE` blocks (triple injected simultaneous ADC mode, TIM1 TRGO on update). Regenerating from `motorcontrol.ioc` will silently revert them. Don't regenerate.
+**CubeMX caveat:** the upstream `motorcontrol.ioc` is archived under `legacy/stm32f446/` and does not describe the N32H473 port. `adc.c` and `tim.c` contain hand edits *outside* the `USER CODE` blocks (triple injected simultaneous ADC mode, TIM1 TRGO on update); do not regenerate the active firmware from that archived project.
 
 ## Real-time architecture (the most important thing to understand)
 

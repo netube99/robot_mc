@@ -48,7 +48,7 @@
 
   .syntax unified
   .cpu cortex-m4
-  .fpu softvfp
+  .fpu fpv4-sp-d16
   .thumb
 
 .global g_pfnVectors
@@ -127,10 +127,8 @@ Default_Handler:
 Infinite_Loop:
   b Infinite_Loop
   .size Default_Handler, .-Default_Handler
-/**
-\* The minimal vector table for a Cortex M0.  Note that the proper constructs
-\* must be placed on this to ensure that it ends up at physical address 0x00000000.
-**/
+/* Cortex-M4 vector table. The linker script places it at the application
+ * flash origin (0x08008000), after the OpenBootloader region. */
    .section .isr_vector,"a",%progbits
   .type g_pfnVectors, %object
   .size g_pfnVectors, .-g_pfnVectors

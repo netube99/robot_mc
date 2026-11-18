@@ -13,8 +13,7 @@ App 链接在 0x08008000（前 32 KB 是 OpenBootloader），所以默认把镜�
 镜像文件本身从 0x08008000 开始（hex/bin/axf 都是），基址只用来算写入地址和回读比对。
 
 用法：
-    python tools/flash_jlink.py                    # 烧 Keil/Objects/mit_h473.axf 到 0x08008000
-    python tools/flash_jlink.py --bin build/mit_h473.bin
+    python tools/flash_jlink.py --bin build/mit_h473.bin # 烧 GCC App 到 0x08008000
     python tools/flash_jlink.py --bin bl.bin --base 0x08000000   # 烧 OpenBootloader
     python tools/flash_jlink.py --erase            # 先整片擦除（bootloader + 配置页都会没！）
     python tools/flash_jlink.py --no-run           # 烧完停在 halt，不 reset&go
@@ -210,8 +209,7 @@ def flash(args):
 def main(argv=None):
     here = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     parser = argparse.ArgumentParser(description="J-Link 分块烧录 + 回读校验（N32H473）")
-    parser.add_argument("--axf", default=os.path.join(here, "Keil", "Objects", "mit_h473.axf"),
-                        help="输入 .axf（默认 Keil 构建产物）")
+    parser.add_argument("--axf", help="输入 Arm/Keil .axf（仅兼容历史产物）")
     parser.add_argument("--bin", help="直接给 .bin（给了就不调用 fromelf）")
     parser.add_argument("--base", type=parse_int, default=APP_BASE,
                         help="镜像的起始地址（默认 app=0x%08X；烧 bootloader 用 0x%08X）"

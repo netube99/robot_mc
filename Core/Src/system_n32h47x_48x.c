@@ -175,7 +175,7 @@
 
 /* #define VECT_TAB_SRAM */
 /* 应用链接在 0x08008000（前 32 KB 是 OpenBootloader），所以向量表要整体偏移同样的
- * 距离。改这里必须同时改 N32H473CE_FLASH.ld 与 Keil/ODrive_N32.sct 的 FLASH 起点，
+ * 距离。改这里必须同时改 N32H473CE_FLASH.ld 的 FLASH 起点，
  * 否则中断会按 0x08000000 处的表分发（那里现在是 bootloader 的向量表）。 */
 #define VECT_TAB_OFFSET 0x8000U /*!< Vector Table base offset field. This value must be a multiple of 0x200. */
 

@@ -35,13 +35,13 @@ than editing `CLAUDE.md`, which is overwritten by upstream merges.
 
 ## Build
 
-Two equivalent builds produce the same firmware:
+The supported firmware build uses GNU Arm Embedded GCC and Make:
 
 - **GNU Make (command line)**: `make` (needs `arm-none-eabi-gcc` on PATH; override the
   directory with `GCC_PATH=`). It uses the Nations-supplied GNU startup
   `Drivers/CMSIS/device/startup/startup_n32h47x_48x_gcc.S` (capital `.S` — the Makefile has
-  a `.S` rule) and `N32H473CE_FLASH.ld` (mirrors `Keil/ODrive_N32.sct`: app at
-  `0x08008000`, length `0x74000`, plus the 16-byte NO_INIT region at `0x20023FF0`
+  a `.S` rule) and `N32H473CE_FLASH.ld` (app at `0x08008000`, length `0x74000`, plus the
+  16-byte NO_INIT region at `0x20023FF0`
   that holds `_reboot_cookie`). Defines:
   `N32H473, ARM_MATH_CM4, HSE_VALUE=24000000, __FPU_PRESENT=1`. Also:
   `make DEBUG=1` (-Og/-g3), `make size`, `make clean`, and `make flash` (J-Link; override
@@ -52,21 +52,15 @@ Two equivalent builds produce the same firmware:
   virtual 总线，不需要硬件；需要 `pip install python-can`）。
   ⚠ The startup vector table must match the device IRQ numbering — a mismatch silently
   misroutes every ISR (keep it in sync if you ever edit it).
-- **Keil MDK (uVision)**: project `Keil/mit_h473.uvprojx`, target `mit_h473`, device
-  `N32H473CE`, **AC6** compiler, scatter file `Keil/ODrive_N32.sct`. Include paths:
-  `Core/Inc`, `Drivers/CMSIS/{core,device}`,
-  `Drivers/n32h47x_48x_std_periph_driver/inc`, `Drivers/n32h47x_48x_usbfsd_driver/inc`.
-
-- ⚠ `Core/Inc/stm32f4xx_hal_conf.h` is a stale upstream leftover (STM32F446) used by
-  neither build. `motorcontrol.ioc` is the **STM32F446RETx** CubeMX file — **do not
-  regenerate** from it (it would revert the port); `adc.c`/`tim.c` also contain hand edits
-  *outside* the `USER CODE` blocks that a regeneration would silently drop.
-- ⚠⚠ **The two builds are NOT equivalent on hardware** (2026-10-26 bench): the `make`
-  (GNU/`arm-none-eabi-gcc`) image boots and talks CAN, but the commutation encoder reads a
-  constant 0 (`telemetry.encoder_raw == 0`, `elec_angle` frozen, `lost_frames == 0`) with the
-  same sources that work when flashed from Keil. Root cause **unknown / not investigated**.
-  Bench-verify with the **Keil** image (`Keil/Objects/mit_h473.axf`) until this is fixed, and
-  don't conclude "the firmware is broken" from a `make` image symptom.
+- ⚠ `Core/Inc/stm32f4xx_hal_conf.h` is a stale upstream leftover (STM32F446) not used by
+  the GCC firmware build. The original STM32F446 CubeIDE/CubeMX inputs (`.project`,
+  `.cproject`, `.mxproject`, `motorcontrol.ioc`, and linker scripts) live under
+  `legacy/stm32f446/`; they are archival only and must not be used to regenerate the N32H473 port.
+- ⚠ **Historical hardware comparison** (2026-10-26): the GCC `make` image boots and talks
+  CAN, but the commutation encoder read constant 0 (`telemetry.encoder_raw == 0`,
+  `elec_angle` frozen, `lost_frames == 0`); the same sources had worked in a historical Keil
+  image. Root cause **unknown / not investigated**. Keil is no longer a supported build path;
+  this note records an unresolved historical observation, not a current validation method.
 - Testing: `make check` (generated tables/docs are current) and `make hosttest`
   (`tools/test_{prefs_codec,can_cyberbeast,motion_law,dual_gear,cogging,endpoint_proto}.c`,
   no target hardware) are the only automated checks; `make hosttest-py`
@@ -89,6 +83,16 @@ Two equivalent builds produce the same firmware:
   bootloader and config pages included).
   After flashing, sanity-check `system.prefs_loaded` / `config.kt` to confirm the new image
   really is running; after a mass erase re-run `action.calibrate` and `action.save`.
+
+## 仓库结构
+
+- `Core/`：固件应用代码（`Inc/` 公共头文件，`Src/` 实现）。
+- `Drivers/`：Nations N32H47x peripheral SDK、USBFSD 和 CMSIS；除非修复上游 SDK 问题，不在此放应用逻辑。
+- 根目录 `Makefile`、`N32H473CE_FLASH.ld`、`params.json`：GCC 构建入口、活动链接布局、参数定义唯一真源。
+- `tools/`：主机端工具、代码生成器和 host tests；不参与固件目标编译，除生成器外可独立运行。
+- `docs/`：用户、开发者和生成的参数文档。
+- `legacy/`：不参与当前构建的历史工程输入和辅助文件，按原工具链分为 `stm32f446/` 与 `keil/`；见 `legacy/README.md`。
+- `build/`：Makefile 生成的本地产物，已忽略，不提交。
 
 ## 文档
 
@@ -424,7 +428,7 @@ Zadig 装 WinUSB（CDC 不受影响）。
 - 改完 JSON 后运行 **`make endpoints`**（或 `python tools/gen_endpoints.py`），
   生成 `Core/Inc/endpoint_defs.h`/`Core/Src/endpoint_defs.c`、
   `Core/Inc/prefs_defs.h`/`Core/Src/prefs_defs.c`，以及 `docs/parameters.md`。
-  生成文件**提交进仓库**（Keil 构建不依赖 Python），不要手工编辑它们；
+  生成文件**提交进仓库**（固件构建不依赖 Python），不要手工编辑它们；
   **`make check`**（= `make endpoints-check`）检查它们是否过期——改了 JSON
   却忘了重新生成，描述符和固件就会静默错配，提交前必须跑。
 - **endpoint ID 由 `tools/endpoint_ids.json` 锁定，只增不改**。改名等于新增
@@ -562,9 +566,8 @@ SysInit 段）。
 - **ID 永久**：绝不重用、绝不改类型/单位/含义。改名用注册表别名/同一 ID；
   语义变化用新 ID + 一次性迁移（`PREFS_SCHEMA` +1，迁移函数在
   `prefs_codec.c`/`preference_writer.c` 里加）。
-- **存储区**：`0x0807C000` / `0x0807E000` 两个 8 KB 页 ping-pong。链接脚本
-  （`N32H473CE_FLASH.ld`）和 Keil scatter（`ODrive_N32.sct`）的 app 区是
-  `0x08008000..0x0807BFFF`（`0x74000`），镜像不可能长进配置页，也不会压到
+- **存储区**：`0x0807C000` / `0x0807E000` 两个 8 KB 页 ping-pong。当前 GCC 链接脚本
+  `N32H473CE_FLASH.ld` 的 app 区是 `0x08008000..0x0807BFFF`（`0x74000`），镜像不可能长进配置页，也不会压到
   `0x08000000..0x08007FFF` 的 OpenBootloader。**bootloader 必须只擦 app 区**；
   整片擦除会连 bootloader 和配置一起清掉，任何软件格式都救不了。这是 OTA 保留
   配置的唯一硬前提，发布前必须做一次“设参数 + 标定 → OTA → 读回”的闭环验证
@@ -600,5 +603,6 @@ SysInit 段）。
   **布尔标志**（`PRE_CALIBRATED` / `FET_TEMP_EN` / `MOT_TEMP_EN`）用 `main.c` 里的
   `uint8_t` 全局（`*_flag`）而不是 `__int_reg`：TLV 里 bool 记录只有 1 字节，
   塞进 `int` 只会写低字节。新增 bool 参数照这个来。
-- Keil/AC6 `NO_INIT` trick: `__attribute__((section(".bss.NO_INIT")))` (used for
-  `_reboot_cookie`) must stay in sync with the scatter file `Keil/ODrive_N32.sct`.
+- Historical Keil/AC6 `NO_INIT` layout is archived under `legacy/keil/`; it is not part of
+  the supported GCC build. Keep the active `.bss.NO_INIT` layout in `N32H473CE_FLASH.ld`
+  and the startup code synchronized with `_reboot_cookie` at `0x20023FF0`.
